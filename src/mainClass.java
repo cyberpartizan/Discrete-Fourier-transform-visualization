@@ -15,8 +15,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class mainClass implements ActionListener, KeyListener, MouseMotionListener, MouseListener {
 	public int height, width, circles;
 	public double time, radius, translate, minusheight, minuswidth, devide;
-	ArrayList<double[]> path = new ArrayList<double[]>();
-	ArrayList<Double> test = new ArrayList<Double>();
+	ArrayList<ComplexNumber> path = new ArrayList<ComplexNumber>();
 	public boolean dotatupperleftcorner = true;
 	File file;
 	Timer sleep;
@@ -25,14 +24,13 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 	Graphics publicg;
 	Scanner sc;
 	int comaindex;
-	ArrayList<double[]> fourielistY = new ArrayList<double[]>();
 	ArrayList<double[]> fourielistX = new ArrayList<double[]>();
 	ArrayList<Double> Y = new ArrayList<Double>();
-	double[] VectorX, VectorY;
-	ArrayList<Double> X = new ArrayList<Double>();
+	ComplexNumber VectorX, VectorY;
+	ArrayList<ComplexNumber> X = new ArrayList<ComplexNumber>();
 	public static mainClass mainClass;
 	public Renderer renderer;
-	File currentfile, ipimif, train, calibrii, flamingo, dog;
+	File currentfile, ipimif, calibrii, flamingo, dog;
 	Font font = new Font("TimesRoman", Font.BOLD, 50);
 	DecimalFormat df = new DecimalFormat("0.000");
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -72,6 +70,7 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 
 	public ArrayList<double[]> sortArraylistOfDoubleArray(ArrayList<double[]> sortinglist) {
 		Collections.sort(sortinglist, new Comparator<double[]>() {
+			//Sorting cycles by amplitude in descending order
 			@Override
 			public int compare(double[] o1, double[] o2) {
 				int first = (int) o1[0];
@@ -81,32 +80,35 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		});
 		return sortinglist;
 	}
-
-	private ArrayList<double[]> dft(ArrayList<Double> x) {
+	
+	private ArrayList<double[]> dft(ArrayList<ComplexNumber> x) {
+		// Discrete Fourier transform 
+		// Return amplitude, frequency, phase , cycle position x , cycle position y
 		ArrayList<double[]> X = new ArrayList<double[]>();
 		int N = x.size();
 		for (int k = 0; k < N; k++) {
-			double re = 0;
-			double im = 0;
+			ComplexNumber sum = new ComplexNumber(0, 0);
 			for (int n = 0; n < N; n++) {
 				double phi = (Math.PI * 2 * k * n) / N;
-				re += x.get(n) * Math.cos(phi);
-				im -= x.get(n) * Math.sin(phi);
+				ComplexNumber phiC = new ComplexNumber(Math.cos(phi), -Math.sin(phi));
+				sum = new ComplexNumber(sum.re + x.get(n).re * phiC.re - x.get(n).im * phiC.im,
+						sum.im + x.get(n).re * phiC.im + x.get(n).im * phiC.re);
 			}
-			re = re / N;
-			im = im / N;
-			X.add(new double[] { Math.sqrt(re * re + im * im), k, Math.atan2(im, re), re, im });
+			sum.re = sum.re / N;
+			sum.im = sum.im / N;
+			X.add(new double[] { Math.sqrt(sum.re * sum.re + sum.im * sum.im), k, Math.atan2(sum.im, sum.re), sum.re,
+					sum.im });
 		}
 		return X;
 	}
 
 	public static void main(String[] args) {
-
 		mainClass = new mainClass();
 	}
 
-	public double[] epiCycles(double x, double y, double r, ArrayList<double[]> f, Graphics graphics,
+	public ComplexNumber epiCycles(double x, double y, double r, ArrayList<double[]> f, Graphics graphics,
 			Graphics2D graphics2d) {
+		// Drawing epicycles
 		for (int i = 0; i < circles; i++) {
 			double prevx = x;
 			double prevy = y;
@@ -114,47 +116,44 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 			radius = f.get(i)[0];
 			x += radius * Math.cos(n * time + f.get(i)[2] + r);
 			y += radius * Math.sin(n * time + f.get(i)[2] + r);
-			graphics.setColor(Color.gray);
-			graphics2d.draw(new Line2D.Double(prevx + 3, prevy + 3, x + 3, y + 3));
-			graphics.setColor(Color.white);
-			graphics.setColor(new Color(50, 50, 50));
+			graphics.setColor(Color.GREEN.darker().darker().darker().darker());
 			graphics.drawOval((int) Math.round(prevx - radius) + 3, (int) Math.round(prevy - radius) + 3,
 					((int) Math.round(radius * 2)), ((int) Math.round(radius * 2)));
-
+			graphics.setColor(Color.red);
+			graphics2d.draw(new Line2D.Double(prevx + 3, prevy + 3, x + 3, y + 3));
 			graphics.setColor(Color.white);
-
 		}
-		return new double[] { x, y };
+		return new ComplexNumber(x, y);
 	}
 
 	public void initializepath() {
+		//Initialization
 		path.clear();
-		fourielistY.clear();
 		fourielistX.clear();
 		X.clear();
 		Y.clear();
 		time = 0;
 		sc.reset();
+
 		try {
 			sc = new Scanner(currentfile);
 		} catch (FileNotFoundException exeption) {
 			exeption.printStackTrace();
 		}
+
 		while (sc.hasNextLine()) {
 			s = sc.next();
 			comaindex = s.indexOf(",");
-			X.add((Double.valueOf(s.substring(0, comaindex)) - minuswidth) / devide);
-			Y.add((Double.valueOf(s.substring(comaindex + 1, s.length())) - minusheight) / devide);
+			ComplexNumber c = new ComplexNumber((Double.valueOf(s.substring(0, comaindex)) - minuswidth) / devide,
+					(Double.valueOf(s.substring(comaindex + 1, s.length())) - minusheight) / devide);
+			X.add(c);
 		}
-		fourielistY.addAll(dft(Y));
 		fourielistX.addAll(dft(X));
-		circles = Y.size();
-		fourielistY = sortArraylistOfDoubleArray(fourielistY);
+		circles = X.size();
 		fourielistX = sortArraylistOfDoubleArray(fourielistX);
 	}
 
 	public void repaint(Graphics g) {
-		publicg = g;
 		Graphics2D gg = (Graphics2D) g;
 		gg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setColor(Color.black);
@@ -163,25 +162,20 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		g.setFont(font);
 		g.drawString(String.valueOf(circles), 0, 40);
 		g.drawString(String.valueOf(sleep.getDelay()), 0, 90);
-		VectorY = epiCycles(150, 500, Math.PI / 2, fourielistY, g, gg);
-		VectorX = epiCycles(800, 150, 0, fourielistX, g, gg);
-		double[] Vector = new double[] { VectorX[0], VectorY[1] };
+		VectorX = epiCycles(width / 2, height / 2, 0, fourielistX, g, gg);
+		//////////////////////////////////////////////////////////
+		ComplexNumber Vector = new ComplexNumber(VectorX.re, VectorX.im);
 		if (dotatupperleftcorner) {
 			path.add(0, Vector);
 			dotatupperleftcorner = false;
 		}
 		path.add(0, Vector);
-		gg.setColor(Color.gray);
-		if (sleep.isRunning()) {
-			gg.draw(new Line2D.Double(VectorX[0] + 3, VectorX[1] + 3, Vector[0] + 3, Vector[1] + 3));
-			gg.draw(new Line2D.Double(VectorY[0] + 3, VectorY[1] + 3, Vector[0] + 3, Vector[1] + 3));
-		}
+		int color = 255;
+		gg.setColor(new Color(color, color, color));
 		for (int i = 1; i < path.size(); i++) {
-			gg.draw(new Line2D.Double(path.get(i - 1)[0] + 3, path.get(i - 1)[1] + 3, path.get(i)[0] + 3,
-					path.get(i)[1] + 3));
-
+			gg.draw(new Line2D.Double(path.get(i - 1).re, path.get(i - 1).im, path.get(i).re, path.get(i).im));
 		}
-		double dt = (2 * Math.PI) / Y.size();
+		double dt = (2 * Math.PI) / X.size();
 		time += dt;
 		if (time > Math.PI * 2) {
 			path.clear();
@@ -190,14 +184,17 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		renderer.repaint();
+	public void mouseReleased(MouseEvent e) {
+		fourielistX.addAll(dft(X));
+		circles = X.size();
+		fourielistX = sortArraylistOfDoubleArray(fourielistX);
+		sleep.start();
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int key = e.getKeyCode();
-		if (key == KeyEvent.VK_UP && circles < fourielistY.size()) {
+		if (key == KeyEvent.VK_UP && circles < fourielistX.size()) {
 			circles++;
 		} else if (key == KeyEvent.VK_DOWN && circles > 1) {
 			circles--;
@@ -249,19 +246,35 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 	}
 
 	@Override
+	public void mouseDragged(MouseEvent e) {
+		ComplexNumber temp = new ComplexNumber((double) e.getX() - width / 2, (double) e.getY() - height / 2);
+		X.add(temp);
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		X.clear();
+		Y.clear();
+		sleep.stop();
+		path.clear();
+		fourielistX.clear();
+		time = 0;
+		sc.reset();
+		renderer.repaint();
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		renderer.repaint();
+	}
+
+	@Override
 	public void keyReleased(KeyEvent e) {
 
 	}
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-
-	}
-
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		X.add((double) e.getX() - 800 - 10);
-		Y.add((double) e.getY() - 500 - 10);
 
 	}
 
@@ -281,27 +294,4 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 	public void mouseExited(MouseEvent e) {
 	}
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-		X.clear();
-		Y.clear();
-		sleep.stop();
-		path.clear();
-		fourielistY.clear();
-		fourielistX.clear();
-		time = 0;
-		sc.reset();
-		renderer.repaint();
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		fourielistY.addAll(dft(Y));
-		fourielistX.addAll(dft(X));
-		circles = Y.size();
-		fourielistY = sortArraylistOfDoubleArray(fourielistY);
-		fourielistX = sortArraylistOfDoubleArray(fourielistX);
-		sleep.start();
-
-	}
 }
