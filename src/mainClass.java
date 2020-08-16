@@ -3,7 +3,11 @@ import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.RoundingMode;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,27 +34,33 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 	ArrayList<ComplexNumber> X = new ArrayList<ComplexNumber>();
 	public static mainClass mainClass;
 	public Renderer renderer;
+	public String a;
 	File currentfile, ipimif, calibrii, flamingo, dog;
-	Font font = new Font("TimesRoman", Font.BOLD, 50);
+	Font font = new Font("TimesRoman", Font.BOLD, 10);
 	DecimalFormat df = new DecimalFormat("0.000");
+	
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
 	public mainClass() {
+		a = null;
+		try {
+			a = new File(".").getCanonicalPath();
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
 		width = 1280;
 		height = 720;
 		minusheight = height / 1.65;
 		minuswidth = width / 2.5;
 		devide = height / 300;
-		ipimif = new File("C:\\Users\\ß\\eclipse-workspace\\123\\src\\ipimif.txt");
-		calibrii = new File("C:\\Users\\ß\\eclipse-workspace\\123\\src\\calibrii.txt");
-		flamingo = new File("C:\\Users\\ß\\eclipse-workspace\\123\\src\\flamingo.txt");
-		dog = new File("C:\\Users\\ß\\eclipse-workspace\\123\\src\\dog.txt");
+
+		ipimif = new File(a+"\\Paths\\ipimif.txt");
+		
+		calibrii = new File(a+"\\Paths\\calibrii.txt");
+		flamingo = new File(a+"\\Paths\\flamingo.txt");
+		dog = new File(a+"\\Paths\\dog.txt");
 		currentfile = calibrii;
-		try {
-			sc = new Scanner(currentfile);
-		} catch (FileNotFoundException exeption) {
-			exeption.printStackTrace();
-		}
 		time = 0f;
 		df.setRoundingMode(RoundingMode.UP);
 
@@ -126,17 +136,16 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		return new ComplexNumber(x, y);
 	}
 
-	public void initializepath() {
+	public void initializepath(File f) {
 		//Initialization
 		path.clear();
 		fourielistX.clear();
 		X.clear();
 		Y.clear();
 		time = 0;
-		sc.reset();
 
 		try {
-			sc = new Scanner(currentfile);
+			sc = new Scanner(f);
 		} catch (FileNotFoundException exeption) {
 			exeption.printStackTrace();
 		}
@@ -163,7 +172,8 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		g.drawString(String.valueOf(circles), 0, 40);
 		g.drawString(String.valueOf(sleep.getDelay()), 0, 90);
 		VectorX = epiCycles(width / 2, height / 2, 0, fourielistX, g, gg);
-		//////////////////////////////////////////////////////////
+		
+		g.drawString(ipimif.getAbsolutePath().toString(), 0, 300);
 		ComplexNumber Vector = new ComplexNumber(VectorX.re, VectorX.im);
 		if (dotatupperleftcorner) {
 			path.add(0, Vector);
@@ -200,23 +210,19 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 			circles--;
 		} else if (key == KeyEvent.VK_1) {
 			sleep.stop();
-			currentfile = ipimif;
-			initializepath();
+			initializepath(ipimif);
 			sleep.start();
 		} else if (key == KeyEvent.VK_2) {
 			sleep.stop();
-			currentfile = calibrii;
-			initializepath();
+			initializepath(calibrii);
 			sleep.start();
 		} else if (key == KeyEvent.VK_3) {
 			sleep.stop();
-			currentfile = flamingo;
-			initializepath();
+			initializepath(flamingo);
 			sleep.start();
 		} else if (key == KeyEvent.VK_4) {
 			sleep.stop();
-			currentfile = dog;
-			initializepath();
+			initializepath(dog);
 			sleep.start();
 		} else if (key == KeyEvent.VK_9) {
 			JFileChooser chooser = new JFileChooser();
@@ -225,8 +231,7 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 			int returnVal = chooser.showOpenDialog(null);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				sleep.stop();
-				currentfile = new File(chooser.getSelectedFile().getPath());
-				initializepath();
+				initializepath(new File(chooser.getSelectedFile().getPath()));
 				sleep.start();
 			}
 		} else if (key == KeyEvent.VK_0) {
