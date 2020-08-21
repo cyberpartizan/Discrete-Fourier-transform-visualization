@@ -34,17 +34,17 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 	ArrayList<ComplexNumber> X = new ArrayList<ComplexNumber>();
 	public static mainClass mainClass;
 	public Renderer renderer;
-	public String a;
+	public String absolutePath;
 	File currentfile, ipimif, calibrii, flamingo, dog;
-	Font font = new Font("TimesRoman", Font.BOLD, 10);
+	Font font = new Font("TimesRoman", Font.BOLD, 50);
 	DecimalFormat df = new DecimalFormat("0.000");
 	
 	Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
 	public mainClass() {
-		a = null;
+		absolutePath = null;
 		try {
-			a = new File(".").getCanonicalPath();
+			absolutePath = new File(".").getCanonicalPath();
 		} catch (IOException e) {
 			
 			e.printStackTrace();
@@ -55,11 +55,11 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		minuswidth = width / 2.5;
 		devide = height / 300;
 
-		ipimif = new File(a+"\\Paths\\ipimif.txt");
+		ipimif = new File(absolutePath+"\\Paths\\ipimif.txt");
 		
-		calibrii = new File(a+"\\Paths\\calibrii.txt");
-		flamingo = new File(a+"\\Paths\\flamingo.txt");
-		dog = new File(a+"\\Paths\\dog.txt");
+		calibrii = new File(absolutePath+"\\Paths\\calibrii.txt");
+		flamingo = new File(absolutePath+"\\Paths\\flamingo.txt");
+		dog = new File(absolutePath+"\\Paths\\dog.txt");
 		currentfile = calibrii;
 		time = 0f;
 		df.setRoundingMode(RoundingMode.UP);
@@ -172,8 +172,6 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		g.drawString(String.valueOf(circles), 0, 40);
 		g.drawString(String.valueOf(sleep.getDelay()), 0, 90);
 		VectorX = epiCycles(width / 2, height / 2, 0, fourielistX, g, gg);
-		
-		g.drawString(ipimif.getAbsolutePath().toString(), 0, 300);
 		ComplexNumber Vector = new ComplexNumber(VectorX.re, VectorX.im);
 		if (dotatupperleftcorner) {
 			path.add(0, Vector);
@@ -193,13 +191,7 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		}
 	}
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		fourielistX.addAll(dft(X));
-		circles = X.size();
-		fourielistX = sortArraylistOfDoubleArray(fourielistX);
-		sleep.start();
-	}
+	
 
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -249,13 +241,6 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 			sleep.setDelay(sleep.getDelay() + 1);
 		}
 	}
-
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		ComplexNumber temp = new ComplexNumber((double) e.getX() - width / 2, (double) e.getY() - height / 2);
-		X.add(temp);
-	}
-
 	@Override
 	public void mousePressed(MouseEvent e) {
 		X.clear();
@@ -266,6 +251,20 @@ public class mainClass implements ActionListener, KeyListener, MouseMotionListen
 		time = 0;
 		sc.reset();
 		renderer.repaint();
+	}
+	
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		ComplexNumber temp = new ComplexNumber((double) e.getX() - (width / 2), (double) e.getY() - (height / 2)-20);
+		X.add(temp);
+	}
+	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		fourielistX.addAll(dft(X));
+		circles = X.size();
+		fourielistX = sortArraylistOfDoubleArray(fourielistX);
+		sleep.start();
 	}
 
 	@Override
