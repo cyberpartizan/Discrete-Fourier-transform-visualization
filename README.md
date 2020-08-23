@@ -6,7 +6,7 @@ to an epicycle that recreates the path using circles.
 
 # Features
 Control of:
-  - maximum number of cicles on screen
+  - maximum number of cicles on screen (using ↑ and ↓ buttons)
   - drawing speed
   - choosing path from builed in paths
   - choosing path from a txt file
@@ -15,8 +15,10 @@ Control of:
 
 # Examples
 ***Example 1***
+
 ![](Examples/DFT1.gif)
 
 ***Example 2***
+
 ![](Examples/DFT2.gif)
 
